@@ -2,17 +2,12 @@ const mongoose = require('mongoose');
 
 const MONGO_URI = process.env.MONGO_URI;
 
-// Configure mongoose connection with additional options to handle timeouts and reconnection
+// Configure mongoose connection with supported options
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 30000, // Increase server selection timeout to 30 seconds
-  heartbeatFrequencyMS: 10000, // Heartbeat to check connection status every 10 seconds
-  autoReconnect: true, // Enable auto-reconnection
-  reconnectTries: Number.MAX_VALUE, // Retry connection indefinitely
-  reconnectInterval: 1000, // Wait 1 second between reconnection attempts
-  bufferCommands: false, // Disable command buffering to prevent timeout errors
-  bufferTimeoutMS: 30000 // Set buffer timeout to 30 seconds to align with server selection timeout
+  heartbeatFrequencyMS: 10000 // Heartbeat to check connection status every 10 seconds
 })
 .then(() => {
   console.log('MongoDB connected successfully');
@@ -32,25 +27,21 @@ mongoose.connect(MONGO_URI, {
 const db = mongoose.connection;
 
 db.on('disconnected', () => {
-  console.warn('MongoDB disconnected. Attempting to reconnect...');
-});
-
-db.on('reconnected', () => {
-  console.log('MongoDB reconnected successfully');
+  console.warn('MongoDB disconnected.');
 });
 
 db.on('error', (err) => {
   console.error('MongoDB connection error event:', err);
-  // Additional logging for timeout-specific errors
+  // Additional logging for error details
   console.error('Detailed error info:', {
     message: err.message,
     name: err.name,
     code: err.code,
-    stack: err.stack // Log full stack trace for diagnosing issues like buffering timeout
+    stack: err.stack // Log full stack trace for diagnosing issues
   });
 });
 
-// Log when the connection is close
+// Log when the connection is closed
 db.on('close', () => {
   console.warn('MongoDB connection closed.');
 });

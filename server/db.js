@@ -11,6 +11,8 @@ mongoose.connect(MONGO_URI, {
   autoReconnect: true, // Enable auto-reconnection
   reconnectTries: Number.MAX_VALUE, // Retry connection indefinitely
   reconnectInterval: 1000, // Wait 1 second between reconnection attempts
+  bufferCommands: false, // Disable command buffering to prevent timeout errors
+  bufferTimeoutMS: 30000 // Set buffer timeout to 30 seconds to align with server selection timeout
 })
 .then(() => {
   console.log('MongoDB connected successfully');

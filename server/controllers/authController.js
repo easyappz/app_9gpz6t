@@ -54,7 +54,12 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Ошибка при регистрации', error: error.message });
+    // Enhanced error handling for timeout-related issues
+    if (error.name === 'MongooseError' && error.message.includes('buffering timed out')) {
+      res.status(503).json({ message: 'Сервис временно недоступен из-за проблем с базой данных. Попробуйте позже.', error: error.message });
+    } else {
+      res.status(500).json({ message: 'Ошибка при регистрации', error: error.message });
+    }
   }
 };
 
@@ -91,7 +96,12 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Ошибка при входе', error: error.message });
+    // Enhanced error handling for timeout-related issues
+    if (error.name === 'MongooseError' && error.message.includes('buffering timed out')) {
+      res.status(503).json({ message: 'Сервис временно недоступен из-за проблем с базой данных. Попробуйте позже.', error: error.message });
+    } else {
+      res.status(500).json({ message: 'Ошибка при входе', error: error.message });
+    }
   }
 };
 
@@ -117,7 +127,12 @@ exports.requestPasswordReset = async (req, res) => {
     res.json({ message: 'Токен для сброса пароля сгенерирован', token: resetToken });
   } catch (error) {
     console.error('Password reset request error:', error);
-    res.status(500).json({ message: 'Ошибка при запросе сброса пароля', error: error.message });
+    // Enhanced error handling for timeout-related issues
+    if (error.name === 'MongooseError' && error.message.includes('buffering timed out')) {
+      res.status(503).json({ message: 'Сервис временно недоступен из-за проблем с базой данных. Попробуйте позже.', error: error.message });
+    } else {
+      res.status(500).json({ message: 'Ошибка при запросе сброса пароля', error: error.message });
+    }
   }
 };
 
@@ -146,6 +161,11 @@ exports.resetPassword = async (req, res) => {
     res.json({ message: 'Сброс пароля успешен' });
   } catch (error) {
     console.error('Password reset error:', error);
-    res.status(500).json({ message: 'Ошибка при сбросе пароля', error: error.message });
+    // Enhanced error handling for timeout-related issues
+    if (error.name === 'MongooseError' && error.message.includes('buffering timed out')) {
+      res.status(503).json({ message: 'Сервис временно недоступен из-за проблем с базой данных. Попробуйте позже.', error: error.message });
+    } else {
+      res.status(500).json({ message: 'Ошибка при сбросе пароля', error: error.message });
+    }
   }
 };

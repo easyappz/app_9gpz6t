@@ -11,6 +11,8 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [gender, setGender] = useState('');
+  const [age, setAge] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -21,6 +23,9 @@ const RegisterPage = () => {
     if (!email) newErrors.email = 'Email обязателен';
     if (!password) newErrors.password = 'Пароль обязателен';
     if (password !== confirmPassword) newErrors.confirmPassword = 'Пароли не совпадают';
+    if (!gender) newErrors.gender = 'Пол обязателен';
+    if (!age) newErrors.age = 'Возраст обязателен';
+    else if (age < 18) newErrors.age = 'Возраст должен быть не менее 18 лет';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -35,14 +40,20 @@ const RegisterPage = () => {
         username,
         email,
         password,
+        gender,
+        age: parseInt(age, 10),
       });
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         navigate('/profile');
+      } else {
+        setErrors({ form: 'Регистрация прошла успешно, но токен не получен. Пожалуйста, войдите.' });
       }
     } catch (error) {
-      setErrors({ form: error.response?.data?.message || 'Ошибка регистрации' });
+      const errorMessage = error.response?.data?.message || 'Ошибка регистрации. Пожалуйста, попробуйте снова.';
+      setErrors({ form: errorMessage });
+      console.error('Registration error:', error);
     } finally {
       setLoading(false);
     }
@@ -51,7 +62,7 @@ const RegisterPage = () => {
   return (
     <Card title="Регистрация">
       <Form onSubmit={handleSubmit}>
-        {errors.form && <div className="error-message">{errors.form}</div>}
+        {errors.form && <div className="error-message" style={{ color: '#dc3545', marginBottom: '10px', fontSize: '14px' }}>{errors.form}</div>}
         <Input
           label="Имя пользователя"
           name="username"
@@ -85,6 +96,24 @@ const RegisterPage = () => {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           error={errors.confirmPassword}
+          required
+        />
+        <Input
+          label="Пол"
+          name="gender"
+          value={gender}
+          onChange={(e) => setGender(e.target.value)}
+          placeholder="Укажите ваш пол"
+          error={errors.gender}
+          required
+        />
+        <Input
+          label="Возраст"
+          name="age"
+          type="number"
+          value={age}
+          onChange={(e) => setAge(e.target.value)}
+          error={errors.age}
           required
         />
         <Button type="submit" variant="primary" disabled={loading}>

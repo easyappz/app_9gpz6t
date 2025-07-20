@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import Form from '../components/ui/Form';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
+import Select from '../components/ui/Select';
 import { instance } from '../api/axios';
 
 const RegisterPage = () => {
@@ -16,6 +17,13 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const genderOptions = [
+    { value: '', label: 'Выберите пол' },
+    { value: 'male', label: 'Мужской' },
+    { value: 'female', label: 'Женский' },
+    { value: 'other', label: 'Другое' },
+  ];
 
   const validateForm = () => {
     const newErrors = {};
@@ -98,15 +106,16 @@ const RegisterPage = () => {
           error={errors.confirmPassword}
           required
         />
-        <Input
-          label="Пол"
-          name="gender"
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          placeholder="Укажите ваш пол"
-          error={errors.gender}
-          required
-        />
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Пол</label>
+          <Select
+            name="gender"
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+            options={genderOptions}
+          />
+          {errors.gender && <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>{errors.gender}</div>}
+        </div>
         <Input
           label="Возраст"
           name="age"

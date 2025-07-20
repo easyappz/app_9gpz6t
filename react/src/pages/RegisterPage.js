@@ -33,7 +33,7 @@ const RegisterPage = () => {
     if (password !== confirmPassword) newErrors.confirmPassword = 'Пароли не совпадают';
     if (!gender) newErrors.gender = 'Пол обязателен';
     if (!age) newErrors.age = 'Возраст обязателен';
-    else if (age < 18) newErrors.age = 'Возраст должен быть не менее 18 лет';
+    else if (isNaN(parseInt(age, 10)) || parseInt(age, 10) < 18) newErrors.age = 'Возраст должен быть не менее 18 лет';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -59,7 +59,21 @@ const RegisterPage = () => {
         setErrors({ form: 'Регистрация прошла успешно, но токен не получен. Пожалуйста, войдите.' });
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Ошибка регистрации. Пожалуйста, попробуйте снова.';
+      let errorMessage = 'Ошибка регистрации. Пожалуйста, попробуйте снова.';
+      if (error.response && error.response.data && error.response.data.message) {
+        const serverMessage = error.response.data.message;
+        if (serverMessage.includes('Email уже зарегистрирован')) {
+          errorMessage = 'Email уже зарегистрирован. Пожалуйста, используйте другой email.';
+        } else if (serverMessage.includes('Некорректное значение пола')) {
+          errorMessage = 'Некорректное значение пола. Пожалуйста, выберите одно из предложенных значений.';
+        } else if (serverMessage.includes('Некорректный возраст')) {
+          errorMessage = 'Некорректный возраст. Пожалуйста, укажите действительный возраст.';
+        } else if (serverMessage.includes('Все поля обязательны')) {
+          errorMessage = 'Все поля обязательны для заполнения.';
+        } else {
+          errorMessage = serverMessage;
+        }
+      }
       setErrors({ form: errorMessage });
       console.error('Registration error:', error);
     } finally {

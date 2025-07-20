@@ -1,37 +1,31 @@
 const express = require('express');
+const authMiddleware = require('./middleware/auth');
+const upload = require('./config/multer');
 
-/**
- * Пример создания модели в базу данных
- */
-// const mongoose = require('mongoose');
-// const db = require('/db');
-
-// const MongoTestSchema = new mongoose.Schema({
-//   value: { type: String, required: true },
-// });
-
-// const MongoModelTest = db.mongoDb.model('Test', MongoTestSchema);
-
-// const newTest = new MongoModelTest({
-//   value: 'test-value',
-// });
-
-// newTest.save();
+const authController = require('./controllers/authController');
+const photoController = require('./controllers/photoController');
+const ratingController = require('./controllers/ratingController');
+const userController = require('./controllers/userController');
 
 const router = express.Router();
 
-// GET /api/hello
-router.get('/hello', (req, res) => {
-  res.json({ message: 'Hello from API!' });
-});
+// Auth routes
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.post('/request-password-reset', authController.requestPasswordReset);
+router.post('/reset-password', authController.resetPassword);
 
-// GET /api/status
-router.get('/status', (req, res) => {
-  res.json({ 
-    status: 'ok',
-    timestamp: new Date().toISOString()
-  });
-});
+// User routes
+router.get('/profile', authMiddleware, userController.getProfile);
+
+// Photo routes
+router.post('/photos/upload', authMiddleware, upload.single('photo'), photoController.uploadPhoto);
+router.get('/photos', authMiddleware, photoController.getUserPhotos);
+router.put('/photos/:photoId/toggle-active', authMiddleware, photoController.togglePhotoActive);
+router.get('/photos/rate', authMiddleware, photoController.getPhotoForRating);
+router.get('/photos/:photoId/stats', authMiddleware, photoController.getPhotoStats);
+
+// Rating routes
+router.post('/ratings', authMiddleware, ratingController.ratePhoto);
 
 module.exports = router;
-

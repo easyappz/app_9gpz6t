@@ -22,6 +22,7 @@ mongoose.connect(MONGO_URI, {
     message: err.message,
     code: err.code,
     name: err.name,
+    stack: err.stack // Added stack trace for deeper debugging
   });
 });
 
@@ -38,6 +39,18 @@ db.on('reconnected', () => {
 
 db.on('error', (err) => {
   console.error('MongoDB connection error event:', err);
+  // Additional logging for timeout-specific errors
+  console.error('Detailed error info:', {
+    message: err.message,
+    name: err.name,
+    code: err.code,
+    stack: err.stack // Log full stack trace for diagnosing issues like buffering timeout
+  });
+});
+
+// Log when the connection is close
+db.on('close', () => {
+  console.warn('MongoDB connection closed.');
 });
 
 module.exports = mongoose;

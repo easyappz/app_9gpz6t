@@ -1,0 +1,22 @@
+.ui-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.ui-card-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+  color: #333;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.ui-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}

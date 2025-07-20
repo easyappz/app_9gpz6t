@@ -1,28 +1,17 @@
-import styled from 'styled-components';
+import React from 'react';
+import './Button.css';
 
-const Button = styled.button`
-  background-color: ${props => props.variant === 'secondary' ? '#ecf0f1' : '#3498db'};
-  color: ${props => props.variant === 'secondary' ? '#2c3e50' : '#ffffff'};
-  border: none;
-  padding: 10px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  &:hover {
-    background-color: ${props => props.variant === 'secondary' ? '#dcdfe1' : '#2980b9'};
-  }
-
-  &:disabled {
-    background-color: #bdc3c7;
-    cursor: not-allowed;
-  }
-`;
+const Button = ({ children, variant = 'primary', onClick, disabled, type = 'button', className = '' }) => {
+  return (
+    <button
+      type={type}
+      className={`ui-button ui-button-${variant} ${className}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  );
+};
 
 export default Button;

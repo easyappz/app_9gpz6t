@@ -1,19 +1,21 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Header from './Header';
-import Footer from './Footer';
-import { Container } from './ui/Layout';
+import './Layout.css';
 
-function Layout() {
+const Layout = () => {
   return (
-    <Container>
-      <Header />
-      <main>
+    <div className="layout">
+      <header className="layout-header">
+        <h1>ФотоРейтинг</h1>
+      </header>
+      <main className="layout-main">
         <Outlet />
       </main>
-      <Footer />
-    </Container>
+      <footer className="layout-footer">
+        <p>© 2023 ФотоРейтинг. Все права защищены.</p>
+      </footer>
+    </div>
   );
-}
+};
 
 export default Layout;

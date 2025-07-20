@@ -1,103 +1,65 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { instance } from '../api/axios';
-import { Title, Text } from '../components/ui/Typography';
+import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Card } from '../components/ui/Layout';
+import { instance } from '../api/axios';
 
-function UploadPhotoPage() {
+const UploadPhotoPage = () => {
   const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const queryClient = useQueryClient();
+  const [success, setSuccess] = useState(false);
 
-  const uploadMutation = useMutation(
-    async (formData) => {
-      const response = await instance.post('/api/photos/upload', formData, {
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+    setError('');
+    setSuccess(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      setError('Пожалуйста, выберите файл для загрузки.');
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+      await instance.post('/api/photos/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      return response.data;
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['userPhotos']);
-        setFile(null);
-        setPreview(null);
-        setError('');
-        alert('Фотография успешно загружена!');
-      },
-      onError: (error) => {
-        setError(error.response?.data?.message || 'Ошибка при загрузке фотографии');
-      },
-    }
-  );
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-      };
-      reader.readAsDataURL(selectedFile);
-    } else {
+      setSuccess(true);
       setFile(null);
-      setPreview(null);
+      document.getElementById('fileInput').value = '';
+    } catch (err) {
+      setError('Не удалось загрузить фотографию. Попробуйте снова.');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!file) {
-      setError('Пожалуйста, выберите файл');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('photo', file);
-    uploadMutation.mutate(formData);
   };
 
   return (
-    <div className="container">
-      <Card>
-        <Title>Загрузить фотографию</Title>
-        <Text>Выберите изображение для загрузки и оценки другими пользователями.</Text>
-
-        <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              style={{ display: 'block', margin: '0 auto' }}
-            />
-          </div>
-
-          {preview && (
-            <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-              <img
-                src={preview}
-                alt="Предпросмотр"
-                style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px' }}
-              />
-            </div>
-          )}
-
-          {error && <div style={{ color: 'red', marginBottom: '10px', textAlign: 'center' }}>{error}</div>}
-
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <Button type="submit" disabled={uploadMutation.isLoading || !file}>
-              {uploadMutation.isLoading ? 'Загрузка...' : 'Загрузить'}
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
+    <Card title="Загрузка фотографии">
+      {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">Фотография успешно загружена!</div>}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="file"
+          id="fileInput"
+          accept="image/*"
+          onChange={handleFileChange}
+          style={{ marginBottom: '15px' }}
+        />
+        <Button type="submit" variant="primary" disabled={loading || !file}>
+          {loading ? 'Загрузка...' : 'Загрузить'}
+        </Button>
+      </form>
+    </Card>
   );
-}
+};
 
 export default UploadPhotoPage;

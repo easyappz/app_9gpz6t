@@ -1,87 +1,81 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { instance } from '../api/axios';
-import { Title } from '../components/ui/Typography';
-import { FormContainer, FormGroup, Label, ErrorMessage } from '../components/ui/Form';
+import Card from '../components/ui/Card';
+import Form from '../components/ui/Form';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import { Card } from '../components/ui/Layout';
+import { instance } from '../api/axios';
 
-function LoginPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/';
+const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/profile';
 
-  const loginMutation = useMutation(
-    async (credentials) => {
-      const response = await instance.post('/api/login', credentials);
-      return response.data;
-    },
-    {
-      onSuccess: (data) => {
-        localStorage.setItem('token', data.token);
-        navigate(from, { replace: true });
-      },
-      onError: (error) => {
-        setError(error.response?.data?.message || 'Ошибка входа. Проверьте данные.');
-      },
-    }
-  );
+  const validateForm = () => {
+    const newErrors = {};
+    if (!email) newErrors.email = 'Email обязателен';
+    if (!password) newErrors.password = 'Пароль обязателен';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Все поля обязательны для заполнения');
-      return;
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const response = await instance.post('/api/login', {
+        email,
+        password,
+      });
+
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        navigate(from, { replace: true });
+      }
+    } catch (error) {
+      setErrors({ form: error.response?.data?.message || 'Ошибка входа' });
+    } finally {
+      setLoading(false);
     }
-    setError('');
-    loginMutation.mutate({ email, password });
   };
 
   return (
-    <div className="container">
-      <Card>
-        <Title>Вход</Title>
-        <FormContainer onSubmit={handleSubmit}>
-          <FormGroup>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Введите email"
-            />
-          </FormGroup>
-
-          <FormGroup>
-            <Label htmlFor="password">Пароль</Label>
-            <Input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Введите пароль"
-            />
-          </FormGroup>
-
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-
-          <Button type="submit" disabled={loginMutation.isLoading}>
-            {loginMutation.isLoading ? 'Вход...' : 'Войти'}
-          </Button>
-
-          <Button type="button" variant="secondary" onClick={() => navigate('/reset-password')}>
-            Забыли пароль?
-          </Button>
-        </FormContainer>
-      </Card>
-    </div>
+    <Card title="Вход">
+      <Form onSubmit={handleSubmit}>
+        {errors.form && <div className="error-message">{errors.form}</div>}
+        <Input
+          label="Email"
+          name="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={errors.email}
+          required
+        />
+        <Input
+          label="Пароль"
+          name="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={errors.password}
+          required
+        />
+        <Button type="submit" variant="primary" disabled={loading}>
+          {loading ? 'Вход...' : 'Войти'}
+        </Button>
+        <div className="form-footer">
+          <a href="/reset-password">Забыли пароль?</a>
+        </div>
+      </Form>
+    </Card>
   );
-}
+};
 
 export default LoginPage;

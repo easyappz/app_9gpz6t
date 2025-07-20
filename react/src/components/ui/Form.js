@@ -1,27 +1,12 @@
-import styled from 'styled-components';
+import React from 'react';
+import './Form.css';
 
-export const FormContainer = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-width: 500px;
-  margin: 0 auto;
-`;
+const Form = ({ children, onSubmit, className = '' }) => {
+  return (
+    <form className={`ui-form ${className}`} onSubmit={onSubmit}>
+      {children}
+    </form>
+  );
+};
 
-export const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-`;
-
-export const Label = styled.label`
-  font-size: 16px;
-  font-weight: 500;
-  color: #2c3e50;
-`;
-
-export const ErrorMessage = styled.span`
-  color: #e74c3c;
-  font-size: 14px;
-  margin-top: 5px;
-`;
+export default Form;

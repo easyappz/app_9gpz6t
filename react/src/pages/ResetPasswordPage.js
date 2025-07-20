@@ -1,75 +1,66 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { instance } from '../api/axios';
-import { Title } from '../components/ui/Typography';
-import { FormContainer, FormGroup, Label, ErrorMessage } from '../components/ui/Form';
+import Card from '../components/ui/Card';
+import Form from '../components/ui/Form';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import { Card } from '../components/ui/Layout';
+import { instance } from '../api/axios';
 
-function ResetPasswordPage() {
-  const navigate = useNavigate();
+const ResetPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  const resetPasswordMutation = useMutation(
-    async (data) => {
-      const response = await instance.post('/api/request-password-reset', data);
-      return response.data;
-    },
-    {
-      onSuccess: () => {
-        setMessage('Инструкции по восстановлению пароля отправлены на ваш email.');
-        setError('');
-      },
-      onError: (error) => {
-        setError(error.response?.data?.message || 'Произошла ошибка. Попробуйте снова.');
-        setMessage('');
-      },
-    }
-  );
+  const validateForm = () => {
+    const newErrors = {};
+    if (!email) newErrors.email = 'Email обязателен';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) {
-      setError('Введите email');
-      return;
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      await instance.post('/api/request-password-reset', { email });
+      setSuccess(true);
+    } catch (error) {
+      setErrors({ form: error.response?.data?.message || 'Ошибка при сбросе пароля' });
+    } finally {
+      setLoading(false);
     }
-    resetPasswordMutation.mutate({ email });
   };
 
   return (
-    <div className="container">
-      <Card>
-        <Title>Восстановление пароля</Title>
-        <FormContainer onSubmit={handleSubmit}>
-          <FormGroup>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Введите email"
-            />
-          </FormGroup>
-
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-          {message && <div style={{ color: 'green', fontSize: '14px', marginTop: '10px' }}>{message}</div>}
-
-          <Button type="submit" disabled={resetPasswordMutation.isLoading || message !== ''}>
-            {resetPasswordMutation.isLoading ? 'Отправка...' : 'Отправить инструкции'}
+    <Card title="Сброс пароля">
+      {success ? (
+        <div className="success-message">
+          <p>Письмо с инструкциями по сбросу пароля отправлено на ваш email.</p>
+          <Button variant="primary" onClick={() => setSuccess(false)}>
+            Вернуться
           </Button>
-
-          <Button type="button" variant="secondary" onClick={() => navigate('/login')}>
-            Назад ко входу
+        </div>
+      ) : (
+        <Form onSubmit={handleSubmit}>
+          {errors.form && <div className="error-message">{errors.form}</div>}
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={errors.email}
+            required
+          />
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? 'Отправка...' : 'Сбросить пароль'}
           </Button>
-        </FormContainer>
-      </Card>
-    </div>
+        </Form>
+      )}
+    </Card>
   );
-}
+};
 
 export default ResetPasswordPage;

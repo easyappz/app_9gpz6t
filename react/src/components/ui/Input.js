@@ -1,23 +1,28 @@
-import styled from 'styled-components';
+import React from 'react';
+import './Input.css';
 
-const Input = styled.input`
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-  margin-bottom: 10px;
-  box-sizing: border-box;
-
-  &:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-  }
-
-  &::placeholder {
-    color: #95a5a6;
-  }
-`;
+const Input = ({ type = 'text', value, onChange, placeholder, label, name, error, required = false }) => {
+  return (
+    <div className="ui-input-container">
+      {label && (
+        <label htmlFor={name} className="ui-input-label">
+          {label}
+          {required && <span className="ui-input-required">*</span>}
+        </label>
+      )}
+      <input
+        type={type}
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`ui-input ${error ? 'ui-input-error' : ''}`}
+        required={required}
+      />
+      {error && <span className="ui-input-error-message">{error}</span>}
+    </div>
+  );
+};
 
 export default Input;

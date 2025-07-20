@@ -1,40 +1,26 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Title, Text } from '../components/ui/Typography';
+import { Link } from 'react-router-dom';
+import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Card } from '../components/ui/Layout';
+import '../App.css';
 
-function HomePage() {
-  const navigate = useNavigate();
-  const token = localStorage.getItem('token');
-
+const HomePage = () => {
   return (
-    <div className="container">
-      <Card>
-        <Title>Добро пожаловать в ФотоРейтинг</Title>
-        <Text>
-          Загружайте свои фотографии, оценивайте работы других пользователей и соревнуйтесь за лучшие баллы!
-        </Text>
-        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '20px' }}>
-          {token ? (
-            <>
-              <Button onClick={() => navigate('/upload')}>Загрузить фото</Button>
-              <Button onClick={() => navigate('/rate')} variant="secondary">
-                Оценить фото
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={() => navigate('/login')}>Войти</Button>
-              <Button onClick={() => navigate('/register')} variant="secondary">
-                Регистрация
-              </Button>
-            </>
-          )}
-        </div>
-      </Card>
+    <div className="home-page">
+      <h1>Добро пожаловать в ФотоРейтинг</h1>
+      <p>Загружайте свои фотографии, оценивайте работы других и соревнуйтесь за лучшие оценки!</p>
+      <div className="home-actions">
+        <Card title="Присоединяйтесь к нам!">
+          <Link to="/register">
+            <Button variant="primary">Регистрация</Button>
+          </Link>
+          <Link to="/login">
+            <Button variant="secondary">Вход</Button>
+          </Link>
+        </Card>
+      </div>
     </div>
   );
-}
+};
 
 export default HomePage;

@@ -17,6 +17,8 @@ router.post('/reset-password', authController.resetPassword);
 
 // User routes
 router.get('/profile', authMiddleware, userController.getProfile);
+router.put('/profile', authMiddleware, userController.updateProfile);
+router.put('/profile/password', authMiddleware, userController.updatePassword);
 
 // Photo routes
 router.post('/photos/upload', authMiddleware, upload.single('photo'), photoController.uploadPhoto);

@@ -1,8 +1,12 @@
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { hashPassword, comparePassword, generateToken } = require('../utils/auth');
+const crypto = require('crypto');
+
+// JWT secret key (hardcoded as per instructions)
+const JWT_SECRET = 'my-secret-key-1234567890';
 
 // Register a new user
-const register = async (req, res) => {
+exports.register = async (req, res) => {
   try {
     const { email, password, username } = req.body;
 
@@ -20,25 +24,29 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'Username already taken' });
     }
 
-    const hashedPassword = await hashPassword(password);
-    const user = new User({ email, password: hashedPassword, username });
+    const user = new User({ email, password, username });
     await user.save();
 
-    const token = generateToken(user);
-    res.status(201).json({ token, user: { id: user._id, email: user.email, username: user.username, points: user.points } });
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+
+    return res.status(201).json({
+      message: 'User registered successfully',
+      token,
+      user: { id: user._id, email: user.email, username: user.username },
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Registration failed' });
+    console.error('Registration error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 // Login user
-const login = async (req, res) => {
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
     const user = await User.findOne({ email });
@@ -46,74 +54,82 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const isMatch = await comparePassword(password, user.password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = generateToken(user);
-    res.json({ token, user: { id: user._id, email: user.email, username: user.username, points: user.points } });
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+
+    return res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: { id: user._id, email: user.email, username: user.username },
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Login failed' });
+    console.error('Login error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 // Request password reset
-const requestPasswordReset = async (req, res) => {
+exports.requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const resetToken = Math.random().toString(36).slice(2);
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = resetTokenExpiry;
+    // Generate a reset token and set expiration (1 hour)
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    // In a real app, send email with reset link. For simplicity, return token in response.
-    res.json({ message: 'Password reset token generated', resetToken });
+    // In a real app, send email with reset link. Here we just return the token.
+    return res.status(200).json({
+      message: 'Password reset token generated',
+      resetToken,
+      expiresIn: '1 hour',
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Password reset request failed' });
+    console.error('Password reset request error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 // Reset password
-const resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res) => {
   try {
     const { resetToken, newPassword } = req.body;
 
     if (!resetToken || !newPassword) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'Reset token and new password are required' });
     }
 
-    const user = await User.findOne({ resetToken, resetTokenExpiry: { $gt: Date.now() } });
+    const user = await User.findOne({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
 
-    const hashedPassword = await hashPassword(newPassword);
-    user.password = hashedPassword;
-    user.resetToken = null;
-    user.resetTokenExpiry = null;
+    user.password = newPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
     await user.save();
 
-    res.json({ message: 'Password reset successful' });
+    return res.status(200).json({ message: 'Password reset successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Password reset failed' });
+    console.error('Password reset error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-};
-
-module.exports = {
-  register,
-  login,
-  requestPasswordReset,
-  resetPassword,
 };

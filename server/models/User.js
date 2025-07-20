@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
@@ -14,16 +17,13 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
   },
-  points: {
-    type: Number,
-    default: 0,
-  },
-  resetToken: {
+  resetPasswordToken: {
     type: String,
     default: null,
   },
-  resetTokenExpiry: {
+  resetPasswordExpires: {
     type: Date,
     default: null,
   },
@@ -31,6 +31,24 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('User', UserSchema);
+// Pre-save middleware to hash password
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Method to compare password
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = mongoose.model('User', userSchema);

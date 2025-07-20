@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
     }
 
     if (!['male', 'female', 'other'].includes(gender)) {
-      return res.status(400).json({ message: 'Некорректное значение пола' });
+      return res.status(400).json({ message: 'Некорректное значение пола. Допустимые значения: male, female, other' });
     }
 
     // Проверка на существование пользователя

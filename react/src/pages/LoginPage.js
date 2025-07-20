@@ -36,7 +36,9 @@ const LoginPage = () => {
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        navigate(from, { replace: true });
+        navigate('/profile', { replace: true });
+      } else {
+        setErrors({ form: 'Токен не получен. Пожалуйста, попробуйте снова.' });
       }
     } catch (error) {
       setErrors({ form: error.response?.data?.message || 'Ошибка входа' });

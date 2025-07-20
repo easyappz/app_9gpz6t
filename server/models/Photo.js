@@ -1,32 +1,25 @@
 const mongoose = require('mongoose');
 
-const PhotoSchema = new mongoose.Schema({
+const photoSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  filePath: {
+  url: {
     type: String,
     required: true,
   },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other'],
-    required: true,
-  },
-  age: {
-    type: Number,
-    required: true,
-  },
-  isActive: {
+  isActiveForRating: {
     type: Boolean,
     default: false,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  ratings: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Rating',
+  }],
+}, {
+  timestamps: true,
 });
 
-module.exports = mongoose.model('Photo', PhotoSchema);
+module.exports = mongoose.model('Photo', photoSchema);

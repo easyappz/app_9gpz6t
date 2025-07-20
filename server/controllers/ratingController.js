@@ -2,55 +2,45 @@ const Rating = require('../models/Rating');
 const Photo = require('../models/Photo');
 const User = require('../models/User');
 
-// Rate a photo
-const ratePhoto = async (req, res) => {
+exports.ratePhoto = async (req, res) => {
   try {
     const { photoId, score } = req.body;
-
-    if (!photoId || !score) {
-      return res.status(400).json({ message: 'Photo ID and score are required' });
-    }
+    const userId = req.user.id;
 
     const photo = await Photo.findById(photoId);
     if (!photo) {
       return res.status(404).json({ message: 'Photo not found' });
     }
 
-    if (photo.userId.toString() === req.user.id.toString()) {
-      return res.status(400).json({ message: 'You cannot rate your own photo' });
+    if (photo.userId.toString() === userId.toString()) {
+      return res.status(403).json({ message: 'You cannot rate your own photo' });
     }
 
-    const existingRating = await Rating.findOne({ photoId, userId: req.user.id });
+    const existingRating = await Rating.findOne({ photoId, userId });
     if (existingRating) {
-      return res.status(400).json({ message: 'You have already rated this photo' });
+      return res.status(403).json({ message: 'You have already rated this photo' });
     }
 
     const rating = new Rating({
       photoId,
-      userId: req.user.id,
-      score: parseInt(score),
+      userId,
+      score,
     });
     await rating.save();
 
-    // Update points: +1 for rater, -1 for photo owner
-    const rater = await User.findById(req.user.id);
+    photo.ratings.push(rating._id);
+    await photo.save();
+
+    const rater = await User.findById(userId);
     rater.points += 1;
     await rater.save();
 
     const photoOwner = await User.findById(photo.userId);
-    if (photoOwner) {
-      photoOwner.points -= 1;
-      if (photoOwner.points < 0) photoOwner.points = 0;
-      await photoOwner.save();
-    }
+    photoOwner.points -= 1;
+    await photoOwner.save();
 
-    res.status(201).json({ message: 'Photo rated successfully', rating, userPoints: rater.points });
+    res.status(201).json({ message: 'Photo rated successfully', rating });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Rating failed' });
+    res.status(500).json({ message: 'Failed to rate photo', error: error.message });
   }
-};
-
-module.exports = {
-  ratePhoto,
 };

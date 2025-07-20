@@ -52,6 +52,7 @@ if (mongoose.connection.readyState === 1) {
       message: err.message,
       stack: err.stack
     });
+    process.exit(1); // Exit the process if connection fails to prevent server from running without DB
   });
 }
 

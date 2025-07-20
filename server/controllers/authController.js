@@ -8,11 +8,12 @@ exports.register = async (req, res) => {
     const { email, password, username, gender, age } = req.body;
 
     // Валидация входных данных
-    if (!email || !password || !username || !gender || !age) {
+    if (!email || !password || !username || !gender || age === undefined) {
       return res.status(400).json({ message: 'Все поля обязательны для заполнения' });
     }
 
-    if (typeof age !== 'number' || age < 0 || age > 150) {
+    const parsedAge = parseInt(age, 10);
+    if (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 150) {
       return res.status(400).json({ message: 'Некорректный возраст' });
     }
 
@@ -33,7 +34,7 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       username,
       gender,
-      age,
+      age: parsedAge,
     });
 
     // Сохранение пользователя в базе данных
@@ -48,7 +49,7 @@ exports.register = async (req, res) => {
         email, 
         username, 
         gender, 
-        age 
+        age: parsedAge 
       } 
     });
   } catch (error) {
